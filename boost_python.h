@@ -9,7 +9,7 @@
 // run: numpy.get_include() to get include path for numpy
 // usually: 'C:\Python27\lib\site-packages\numpy\core\include'
 
-#include <numpy/arrayobject.h>
+// #include <numpy/arrayobject.h>
 
 namespace bp = boost::python;
 

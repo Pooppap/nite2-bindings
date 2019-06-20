@@ -1,13 +1,14 @@
 
 #define NO_IMPORT_ARRAY
-#include "boost_python.h"
+// #include "boost_python.h"
 #include "nite2.h"
-
-#include <NiTE.h>
-
+#include "openni2.h"
 #include "wrapper_utils.h"
 
-#include "openni2.h"
+#include <NiTE.h>
+#include <boost/python.hpp>
+#include <numpy/arrayobject.h>
+#include <boost/python/numpy.hpp>
 
 #ifdef _MSC_VER
 #define ALWAYS_INLINE __forceinline
@@ -43,22 +44,22 @@ public:
 //-----------------------------------------------------------------------------------------------
 
 template<typename T>
-static void extract_point3_from_py_obj(const bp::object & obj, T & x, T & y, T & z)
+static void extract_point3_from_py_obj(const boost::python::object & obj, T & x, T & y, T & z)
 {
     T new_x, new_y, new_z;
     try
     {
-        new_x = bp::extract<T>(obj[0]);
-        new_y = bp::extract<T>(obj[1]);
-        new_z = bp::extract<T>(obj[2]);
+        new_x = boost::python::extract<T>(obj[0]);
+        new_y = boost::python::extract<T>(obj[1]);
+        new_z = boost::python::extract<T>(obj[2]);
     }
     catch(...)
     {
         try
         {
-            new_x = bp::extract<T>(obj.attr("x"));
-            new_y = bp::extract<T>(obj.attr("y"));
-            new_z = bp::extract<T>(obj.attr("z"));
+            new_x = boost::python::extract<T>(obj.attr("x"));
+            new_y = boost::python::extract<T>(obj.attr("y"));
+            new_z = boost::python::extract<T>(obj.attr("z"));
         }
         catch(...)
         {
@@ -71,24 +72,24 @@ static void extract_point3_from_py_obj(const bp::object & obj, T & x, T & y, T &
 }
 
 template<typename T>
-static void extract_point4_from_py_obj(const bp::object & obj, T & w, T & x, T & y, T & z)
+static void extract_point4_from_py_obj(const boost::python::object & obj, T & w, T & x, T & y, T & z)
 {
     T new_w, new_x, new_y, new_z;
     try
     {
-        new_w = bp::extract<T>(obj[0]);
-        new_x = bp::extract<T>(obj[1]);
-        new_y = bp::extract<T>(obj[2]);
-        new_z = bp::extract<T>(obj[3]);
+        new_w = boost::python::extract<T>(obj[0]);
+        new_x = boost::python::extract<T>(obj[1]);
+        new_y = boost::python::extract<T>(obj[2]);
+        new_z = boost::python::extract<T>(obj[3]);
     }
     catch(...)
     {
         try
         {
-            new_w = bp::extract<T>(obj.attr("w"));
-            new_x = bp::extract<T>(obj.attr("x"));
-            new_y = bp::extract<T>(obj.attr("y"));
-            new_z = bp::extract<T>(obj.attr("z"));
+            new_w = boost::python::extract<T>(obj.attr("w"));
+            new_x = boost::python::extract<T>(obj.attr("x"));
+            new_y = boost::python::extract<T>(obj.attr("y"));
+            new_z = boost::python::extract<T>(obj.attr("z"));
         }
         catch(...)
         {
@@ -126,11 +127,11 @@ public:
     {
     }
     
-    inline Point3fWrapper(const bp::object & obj)
+    inline Point3fWrapper(const boost::python::object & obj)
     {
         try
         {
-            *this = bp::extract<Point3fWrapper>(obj);
+            *this = boost::python::extract<Point3fWrapper>(obj);
         }
         catch(...)
         {
@@ -227,11 +228,11 @@ public:
     {
     }
     
-    inline QuaternionWrapper(const bp::object & obj)
+    inline QuaternionWrapper(const boost::python::object & obj)
     {
         try
         {
-            *this = bp::extract<QuaternionWrapper>(obj);
+            *this = boost::python::extract<QuaternionWrapper>(obj);
         }
         catch(...)
         {
@@ -507,10 +508,10 @@ public:
                 npy_intp dims[2] = { m.getHeight(), m.getWidth() };
                 PyObject * py_obj = PyArray_SimpleNewFromData(2, dims, NPY_SHORT, (void*)pixels);
 
-                bp::handle<> handle(py_obj);
-                bp::numeric::array arr(handle);
+                boost::python::handle<> handle(py_obj);
+                boost::python::numpy::ndarray arr(handle);
 
-                // The problem of returning arr is twofold: firstly the user can modify
+                //  The problem of returning arr is twofold: firstly the user can modify
                 //  the data which will betray the const-correctness
                 //  Secondly the lifetime of the data is managed by the C++ API and not the lifetime
                 //  of the numpy array whatsoever. But we have a simply solution..
@@ -534,15 +535,15 @@ public:
         return m_isValid;
     }
 
-    inline bp::object getUserById(nite::UserId id) const
+    inline boost::python::object getUserById(nite::UserId id) const
     {
         for(unsigned int i = 0; i < m_user_ids.size(); i++)
             if(m_user_ids[i] == id)
                  return m_users[i];
-        return bp::object();
+        return boost::python::object();
     }
 
-    inline const bp::list getUsers() const
+    inline const boost::python::list getUsers() const
     {
         return m_users;
     }
@@ -562,7 +563,7 @@ public:
         return m_depthFrame;
     }
 
-    const bp::object getUserMap() const
+    const boost::python::object getUserMap() const
     {
         return m_userMap;
     }
@@ -581,9 +582,9 @@ private:
     bool m_isValid;
     float m_floorConfidence;
     PlaneWrapper m_floor;
-    bp::list m_users;
+    boost::python::list m_users;
     std::vector<nite::UserId> m_user_ids;
-    bp::object m_userMap;
+    boost::python::object m_userMap;
     VideoFrameWrapper m_depthFrame;
     uint64_t m_timestamp;
     int m_frameIndex;
@@ -733,12 +734,12 @@ public:
         return m_isValid;
     }
 
-    inline const bp::list getHands() const
+    inline const boost::python::list getHands() const
     {
         return m_hands;
     }
 
-    inline const bp::list getGestures() const
+    inline const boost::python::list getGestures() const
     {
         return m_gestures;
     }
@@ -760,8 +761,8 @@ public:
     
 private:
     bool m_isValid;
-    bp::list m_hands;
-    bp::list m_gestures;
+    boost::python::list m_hands;
+    boost::python::list m_gestures;
     VideoFrameWrapper m_depthFrame;
     uint64_t m_timetamp;
     int m_frameIndex;
@@ -788,7 +789,7 @@ public:
         return nite::UserTracker::isValid();
     }
 
-    inline nite::Status create(const bp::object & device = bp::object())
+    inline nite::Status create(const boost::python::object & device = boost::python::object())
     {
         if(device.is_none())
         {
@@ -797,7 +798,7 @@ public:
         }
         else
         {
-            DeviceWrapper & dev = bp::extract<DeviceWrapper&>(device);
+            DeviceWrapper & dev = boost::python::extract<DeviceWrapper&>(device);
             ScopedGILRelease release_gil;
             return nite::UserTracker::create(dev.getDevicePointer());
         }
@@ -809,7 +810,7 @@ public:
         nite::UserTracker::destroy();
     }
 
-    inline bp::tuple readFrame()
+    inline boost::python::tuple readFrame()
     {
         nite::Status status;
         nite::UserTrackerFrameRef frameRef;
@@ -820,9 +821,9 @@ public:
         }
 
         if(status != nite::STATUS_OK)
-            return bp::make_tuple(status, bp::object());
+            return boost::python::make_tuple(status, boost::python::object());
         else
-            return bp::make_tuple(status, UserTrackerFrameWrapper(frameRef));
+            return boost::python::make_tuple(status, UserTrackerFrameWrapper(frameRef));
     }
 
     inline nite::Status setSkeletonSmoothingFactor(float factor)
@@ -855,45 +856,45 @@ public:
         nite::UserTracker::stopPoseDetection(user, type);
     }
 
-    inline bp::tuple convertJointCoordinatesToDepth(float x, float y, float z) const
+    inline boost::python::tuple convertJointCoordinatesToDepth(float x, float y, float z) const
     {
         float outX, outY;
         nite::Status status = nite::UserTracker::convertJointCoordinatesToDepth(x, y, z, &outX, &outY);
-        return bp::make_tuple(status, outX, outY);
+        return boost::python::make_tuple(status, outX, outY);
     }
 
-    inline bp::tuple convertJointCoordinatesToDepth_obj(const bp::object & obj) const
+    inline boost::python::tuple convertJointCoordinatesToDepth_obj(const boost::python::object & obj) const
     {
         float x, y, z;
         float outX, outY;
         extract_point3_from_py_obj(obj, x, y, z);
         nite::Status status = nite::UserTracker::convertJointCoordinatesToDepth(x, y, z, &outX, &outY);
-        return bp::make_tuple(status, outX, outY);
+        return boost::python::make_tuple(status, outX, outY);
     }
 
-    inline bp::tuple convertDepthCoordinatesToJoint(int x, int y, int z) const
+    inline boost::python::tuple convertDepthCoordinatesToJoint(int x, int y, int z) const
     {
         float outX, outY;
         nite::Status status = nite::UserTracker::convertDepthCoordinatesToJoint(x, y, z, &outX, &outY);
-        return bp::make_tuple(status, outX, outY);
+        return boost::python::make_tuple(status, outX, outY);
     }
 
-    inline bp::tuple convertDepthCoordinatesToJoint_obj(const bp::object & obj) const
+    inline boost::python::tuple convertDepthCoordinatesToJoint_obj(const boost::python::object & obj) const
     {
         int x, y, z;
         float outX, outY;
         extract_point3_from_py_obj(obj, x, y, z);
         nite::Status status = nite::UserTracker::convertDepthCoordinatesToJoint(x, y, z, &outX, &outY);
-        return bp::make_tuple(status, outX, outY);
+        return boost::python::make_tuple(status, outX, outY);
     }
 
-    inline void addNewFrameListener(const bp::object & new_frame_callback)
+    inline void addNewFrameListener(const boost::python::object & new_frame_callback)
     {
         if(addListener(m_frameListeners, new_frame_callback))
             nite::UserTracker::addNewFrameListener(this);
     }
 
-    inline void removeNewFrameListener(const bp::object & new_frame_callback)
+    inline void removeNewFrameListener(const boost::python::object & new_frame_callback)
     {
         if(removeListener(m_frameListeners, new_frame_callback))
             nite::UserTracker::removeNewFrameListener(this);
@@ -915,7 +916,7 @@ private:
         }
     }
 
-    std::vector<bp::object> m_frameListeners;
+    std::vector<boost::python::object> m_frameListeners;
 };
 
 //-----------------------------------------------------------------------------------------------
@@ -939,7 +940,7 @@ public:
         return nite::HandTracker::isValid();
     }
 
-    inline nite::Status create(const bp::object & device = bp::object())
+    inline nite::Status create(const boost::python::object & device = boost::python::object())
     {
         if(device.is_none())
         {
@@ -948,7 +949,7 @@ public:
         }
         else
         {
-            DeviceWrapper & dev = bp::extract<DeviceWrapper&>(device);
+            DeviceWrapper & dev = boost::python::extract<DeviceWrapper&>(device);
             ScopedGILRelease release_gil;
             return nite::HandTracker::create(dev.getDevicePointer());
         }
@@ -960,7 +961,7 @@ public:
         nite::HandTracker::destroy();
     }
 
-    inline bp::tuple readFrame()
+    inline boost::python::tuple readFrame()
     {
         nite::Status status;
         nite::HandTrackerFrameRef frame;
@@ -971,9 +972,9 @@ public:
         }
 
         if(status != nite::STATUS_OK)
-            return bp::make_tuple(status, bp::object());
+            return boost::python::make_tuple(status, boost::python::object());
         else
-            return bp::make_tuple(status, HandTrackerFrameWrapper(frame));
+            return boost::python::make_tuple(status, HandTrackerFrameWrapper(frame));
     }
 
     inline nite::Status setSmoothingFactor(float factor)
@@ -986,14 +987,14 @@ public:
         return nite::HandTracker::getSmoothingFactor();
     }
 
-    inline bp::tuple startHandTracking(const bp::object & position)
+    inline boost::python::tuple startHandTracking(const boost::python::object & position)
     {
         nite::HandId newHandId;
         nite::Status status = nite::HandTracker::startHandTracking(Point3fWrapper(position).getPoint3fConstRef(), &newHandId);
         if(status != nite::STATUS_OK)
-            return bp::make_tuple(status, bp::object());
+            return boost::python::make_tuple(status, boost::python::object());
         else
-            return bp::make_tuple(status, newHandId);
+            return boost::python::make_tuple(status, newHandId);
     }
 
     inline void stopHandTracking(nite::HandId id)
@@ -1011,45 +1012,45 @@ public:
         nite::HandTracker::stopGestureDetection(type);
     }
 
-    inline bp::tuple convertHandCoordinatesToDepth(float x, float y, float z) const
+    inline boost::python::tuple convertHandCoordinatesToDepth(float x, float y, float z) const
     {
         float outX, outY;
         nite::Status status = nite::HandTracker::convertHandCoordinatesToDepth(x, y, z, &outX, &outY);
-        return bp::make_tuple(status, outX, outY);
+        return boost::python::make_tuple(status, outX, outY);
     }
 
-    inline bp::tuple convertHandCoordinatesToDepth_obj(const bp::object & obj) const
+    inline boost::python::tuple convertHandCoordinatesToDepth_obj(const boost::python::object & obj) const
     {
         float x, y, z;
         extract_point3_from_py_obj(obj, x, y, z);
         float outX, outY;
         nite::Status status = nite::HandTracker::convertHandCoordinatesToDepth(x, y, z, &outX, &outY);
-        return bp::make_tuple(status, outX, outY);
+        return boost::python::make_tuple(status, outX, outY);
     }
 
-    inline bp::tuple convertDepthCoordinatesToHand(int x, int y, int z) const
+    inline boost::python::tuple convertDepthCoordinatesToHand(int x, int y, int z) const
     {
         float outX, outY;
         nite::Status status = nite::HandTracker::convertDepthCoordinatesToHand(x, y, z, &outX, &outY);
-        return bp::make_tuple(status, outX, outY);
+        return boost::python::make_tuple(status, outX, outY);
     }
 
-    inline bp::tuple convertDepthCoordinatesToHand_obj(const bp::object & obj) const
+    inline boost::python::tuple convertDepthCoordinatesToHand_obj(const boost::python::object & obj) const
     {
         int x, y, z;
         extract_point3_from_py_obj(obj, x, y, z);
         float outX, outY;
         nite::Status status = nite::HandTracker::convertDepthCoordinatesToHand(x, y, z, &outX, &outY);
-        return bp::make_tuple(status, outX, outY);
+        return boost::python::make_tuple(status, outX, outY);
     }
 
-    inline void addNewFrameListener(const bp::object & new_frame_callback)
+    inline void addNewFrameListener(const boost::python::object & new_frame_callback)
     {
         if(addListener(m_frameListeners, new_frame_callback))
             nite::HandTracker::addNewFrameListener(this);
     }
 
-    inline void removeNewFrameListener(const bp::object & new_frame_callback)
+    inline void removeNewFrameListener(const boost::python::object & new_frame_callback)
     {
         if(removeListener(m_frameListeners, new_frame_callback))
             nite::HandTracker::removeNewFrameListener(this);
@@ -1071,7 +1072,7 @@ private:
         }
     }
 
-    std::vector<bp::object> m_frameListeners;
+    std::vector<boost::python::object> m_frameListeners;
 };
 
 //-----------------------------------------------------------------------------------------------
